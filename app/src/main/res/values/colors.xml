@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="st_background">#101923</color>
+    <color name="st_card">#1D2A37</color>
+    <color name="st_primary">#65D9C2</color>
+    <color name="st_secondary">#8EA4B6</color>
+    <color name="st_text">#FFFFFF</color>
+    <color name="st_muted">#A8BBCB</color>
+    <color name="st_accent">#FFB66D</color>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.StepTrackPro" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/st_primary</item>
+        <item name="colorOnPrimary">@color/st_background</item>
+        <item name="colorSecondary">@color/st_secondary</item>
+        <item name="colorSurface">@color/st_card</item>
+        <item name="colorOnSurface">@color/st_text</item>
+        <item name="android:colorBackground">@color/st_background</item>
+        <item name="colorOnBackground">@color/st_text</item>
+        <item name="android:statusBarColor">@color/st_background</item>
+        <item name="android:navigationBarColor">@color/st_background</item>
+    </style>
+</resources>
