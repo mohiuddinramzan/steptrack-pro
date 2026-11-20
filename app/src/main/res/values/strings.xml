@@ -73,4 +73,50 @@
     <string name="answer_no">No</string>
     <string name="goal_days_format">%1$d of %2$d days</string>
     <string name="best_format">%1$s (%2$s)</string>
+
+    <string name="goal_label">Daily step goal</string>
+    <string name="goal_save">Save goal</string>
+    <string name="goal_saved">Goal saved</string>
+    <string name="error_goal">Enter a goal between 100 and 100,000 steps.</string>
+
+    <string name="height_label">Height (cm)</string>
+    <string name="weight_label">Weight (kg)</string>
+    <string name="profile_save">Save profile</string>
+    <string name="profile_saved">Profile saved</string>
+    <string name="error_height">Enter a height between 100 and 250 cm.</string>
+    <string name="error_weight">Enter a weight between 20 and 300 kg.</string>
+    <string name="profile_estimate_note">Distance and calories are estimates based on these values. Days already recorded keep the values they were saved with.</string>
+
+    <string name="streak_title">Walking streak</string>
+    <string name="streak_current">Current streak</string>
+    <string name="streak_best">Best streak</string>
+    <string name="streak_home_format">Streak: %1$s</string>
+    <plurals name="streak_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+
+    <string name="achievements_title">Achievements</string>
+    <string name="recent_title">Recent achievements</string>
+    <string name="recent_empty">No achievements yet. Reach your daily goal to unlock the first one.</string>
+    <string name="ach_status_locked">Locked</string>
+
+    <string name="ach_first_goal_title">First goal</string>
+    <string name="ach_first_goal_desc">Reach your daily goal once</string>
+    <string name="ach_streak_3_title">3-day streak</string>
+    <string name="ach_streak_3_desc">Reach your goal 3 days in a row</string>
+    <string name="ach_streak_7_title">7-day streak</string>
+    <string name="ach_streak_7_desc">Reach your goal 7 days in a row</string>
+    <string name="ach_streak_30_title">30-day streak</string>
+    <string name="ach_streak_30_desc">Reach your goal 30 days in a row</string>
+    <string name="ach_steps_10k_title">10,000 steps in a day</string>
+    <string name="ach_steps_10k_desc">Walk 10,000 steps in a single day</string>
+    <string name="ach_steps_20k_title">20,000 steps in a day</string>
+    <string name="ach_steps_20k_desc">Walk 20,000 steps in a single day</string>
+    <string name="ach_total_100k_title">100,000 steps in total</string>
+    <string name="ach_total_100k_desc">Walk 100,000 steps in total</string>
+
+    <string name="channel_goal_name">Goal alerts</string>
+    <string name="goal_notif_title">Daily goal reached</string>
+    <string name="goal_notif_text">You walked %1$s steps today. Great job!</string>
 </resources>

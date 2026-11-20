@@ -20,15 +20,16 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.steptrack.pro.MainActivity
 import com.steptrack.pro.R
+import com.steptrack.pro.data.SettingsStore
 import com.steptrack.pro.data.StepRepository
-import com.steptrack.pro.data.UserProfile
 import com.steptrack.pro.database.AppDatabase
 import com.steptrack.pro.utils.BootInfo
 import com.steptrack.pro.utils.DateUtils
+import com.steptrack.pro.utils.GoalNotifier
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
@@ -43,11 +44,11 @@ class StepCounterService : Service(), SensorEventListener {
     private val readings = Channel<Reading>(Channel.UNLIMITED)
     private lateinit var sensorManager: SensorManager
     private lateinit var repository: StepRepository
-    private val profile = UserProfile()
+    private lateinit var settings: SettingsStore
     private var listening = false
     private var midnightJob: Job? = null
 
-    // Temporary diagnostics shown in the notification (removed in a later phase).
+    // Temporary diagnostics shown in the expanded notification (removed in a later phase).
     @Volatile private var eventCount = 0
     @Volatile private var lastRaw = -1L
     @Volatile private var lastAgeMs = 0L
@@ -59,7 +60,8 @@ class StepCounterService : Service(), SensorEventListener {
         super.onCreate()
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         repository = StepRepository(AppDatabase.get(this))
-        createChannel()
+        settings = SettingsStore(this)
+        createChannels()
 
         // One consumer processes readings strictly in arrival order.
         scope.launch {
@@ -69,8 +71,9 @@ class StepCounterService : Service(), SensorEventListener {
                         counterValue = reading.counter,
                         eventTimeMillis = reading.timeMillis,
                         bootCount = reading.bootCount,
-                        profile = profile
+                        profile = settings.load()
                     )
+                    checkGoalNotification()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
@@ -165,13 +168,52 @@ class StepCounterService : Service(), SensorEventListener {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    private fun createChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            getString(R.string.channel_name),
-            NotificationManager.IMPORTANCE_LOW
+    private fun createChannels() {
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_ID,
+                getString(R.string.channel_name),
+                NotificationManager.IMPORTANCE_LOW
+            )
         )
-        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        manager.createNotificationChannel(
+            NotificationChannel(
+                GOAL_CHANNEL_ID,
+                getString(R.string.channel_goal_name),
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+        )
+    }
+
+    private fun openAppIntent(): PendingIntent =
+        PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+    /** Posts one "goal reached" notification per day. */
+    private suspend fun checkGoalNotification() {
+        val today = DateUtils.dateKey(System.currentTimeMillis())
+        val day = repository.getDay(today) ?: return
+        if (!GoalNotifier.shouldNotify(day.goalCompleted, settings.lastGoalNotifiedDate(), today)) return
+
+        val manager = getSystemService(NotificationManager::class.java)
+        if (!manager.areNotificationsEnabled()) return
+
+        val steps = NumberFormat.getInstance().format(day.totalSteps)
+        val notification = NotificationCompat.Builder(this, GOAL_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_steps)
+            .setContentTitle(getString(R.string.goal_notif_title))
+            .setContentText(getString(R.string.goal_notif_text, steps))
+            .setContentIntent(openAppIntent())
+            .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .build()
+        manager.notify(GOAL_NOTIFICATION_ID, notification)
+        settings.setLastGoalNotifiedDate(today)
     }
 
     private suspend fun updateNotification() {
@@ -188,12 +230,6 @@ class StepCounterService : Service(), SensorEventListener {
     }
 
     private fun buildNotification(steps: Int?): Notification {
-        val openApp = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, MainActivity::class.java),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
         val text = if (steps == null) {
             getString(R.string.notif_starting)
         } else {
@@ -207,7 +243,7 @@ class StepCounterService : Service(), SensorEventListener {
             .setContentTitle(getString(R.string.app_name))
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText("$text\n$debug"))
-            .setContentIntent(openApp)
+            .setContentIntent(openAppIntent())
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
@@ -218,7 +254,9 @@ class StepCounterService : Service(), SensorEventListener {
     companion object {
         private const val TAG = "StepCounterService"
         private const val CHANNEL_ID = "step_tracking"
+        private const val GOAL_CHANNEL_ID = "goal_alerts"
         private const val NOTIFICATION_ID = 1001
+        private const val GOAL_NOTIFICATION_ID = 1002
         private const val BATCH_LATENCY_US = 60_000_000
         private const val MAX_EVENT_AGE_MS = 6L * 60 * 60 * 1000
 

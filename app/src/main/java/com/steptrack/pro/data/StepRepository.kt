@@ -75,4 +75,15 @@ class StepRepository(private val db: AppDatabase) {
         dao.observeRange(startKey, endKey)
 
     fun observeState(): Flow<TrackerState?> = dao.observeState()
+
+    fun observeAll(): Flow<List<DailyActivity>> = dao.observeAll()
+
+    /** Re-checks today's "goal completed" flag after the user changes the goal. */
+    suspend fun refreshGoalFlag(dateKey: String, goal: Int) {
+        val day = dao.getDay(dateKey) ?: return
+        val reached = goal > 0 && day.totalSteps >= goal
+        if (reached != day.goalCompleted) {
+            dao.upsertDay(day.copy(goalCompleted = reached))
+        }
+    }
 }

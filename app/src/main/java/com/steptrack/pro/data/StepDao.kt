@@ -17,6 +17,9 @@ interface StepDao {
     @Query("SELECT * FROM daily_activity WHERE date BETWEEN :startDate AND :endDate ORDER BY date ASC")
     fun observeRange(startDate: String, endDate: String): Flow<List<DailyActivity>>
 
+    @Query("SELECT * FROM daily_activity ORDER BY date ASC")
+    fun observeAll(): Flow<List<DailyActivity>>
+
     @Upsert
     suspend fun upsertDay(activity: DailyActivity)
 

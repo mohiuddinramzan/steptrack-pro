@@ -4,8 +4,9 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.steptrack.pro.databinding.ActivityMainBinding
+import com.steptrack.pro.ui.GoalsFragment
 import com.steptrack.pro.ui.HomeFragment
-import com.steptrack.pro.ui.SectionFragment
+import com.steptrack.pro.ui.ProfileFragment
 import com.steptrack.pro.ui.StatisticsFragment
 
 class MainActivity : AppCompatActivity() {
@@ -34,9 +35,9 @@ class MainActivity : AppCompatActivity() {
         R.id.nav_statistics ->
             StatisticsFragment()
         R.id.nav_goals ->
-            SectionFragment.newInstance(R.string.goals_title, R.string.goals_note)
+            GoalsFragment()
         R.id.nav_profile ->
-            SectionFragment.newInstance(R.string.profile_title, R.string.profile_note)
+            ProfileFragment()
         else -> null
     }
 

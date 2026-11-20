@@ -10,7 +10,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.steptrack.pro.R
 import com.steptrack.pro.data.DailyActivity
 import com.steptrack.pro.data.StepRepository
-import com.steptrack.pro.data.UserProfile
+import com.steptrack.pro.data.SettingsStore
 import com.steptrack.pro.database.AppDatabase
 import com.steptrack.pro.databinding.FragmentStatisticsBinding
 import com.steptrack.pro.utils.DashboardUtils
@@ -39,7 +39,6 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
     private val binding get() = _binding!!
 
     private lateinit var repository: StepRepository
-    private val profile = UserProfile()
     private val query = MutableStateFlow(Query(StatsMode.WEEK, LocalDate.now()))
 
     private val firstDay: DayOfWeek
@@ -133,7 +132,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
             binding.chartCard.visibility = View.VISIBLE
             binding.statsChart.setData(
                 StatsUtils.buildBars(r.rows, r.period, q.mode),
-                profile.stepGoal,
+                SettingsStore(requireContext()).load().stepGoal,
                 if (q.mode == StatsMode.MONTH) 5 else 1,
                 today.toString()
             )

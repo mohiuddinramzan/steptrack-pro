@@ -4,6 +4,7 @@ import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
@@ -14,16 +15,21 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.steptrack.pro.BuildConfig
 import com.steptrack.pro.R
 import com.steptrack.pro.data.DailyActivity
+import com.steptrack.pro.data.SettingsStore
 import com.steptrack.pro.data.StepRepository
 import com.steptrack.pro.data.UserProfile
 import com.steptrack.pro.database.AppDatabase
 import com.steptrack.pro.databinding.FragmentHomeBinding
 import com.steptrack.pro.service.StepCounterService
+import com.steptrack.pro.utils.AchievementUtils
 import com.steptrack.pro.utils.BatteryUtils
 import com.steptrack.pro.utils.DashboardUtils
+import com.steptrack.pro.utils.DayBar
 import com.steptrack.pro.utils.PermissionUtils
+import com.steptrack.pro.utils.StreakUtils
 import com.steptrack.pro.utils.TimeUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -37,7 +43,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private val binding get() = _binding!!
 
     private lateinit var repository: StepRepository
-    private val profile = UserProfile()
+    private lateinit var settings: SettingsStore
+    private var profile = UserProfile()
+    private var lastDay: DailyActivity? = null
+    private var weekBars: List<DayBar> = emptyList()
     private var permanentlyDenied = false
 
     private val permissionLauncher =
@@ -57,7 +66,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentHomeBinding.bind(view)
-        repository = StepRepository(AppDatabase.get(requireContext().applicationContext))
+        val appContext = requireContext().applicationContext
+        repository = StepRepository(AppDatabase.get(appContext))
+        settings = SettingsStore(appContext)
+        profile = settings.load()
 
         binding.versionText.text = getString(
             R.string.version_format,
@@ -70,10 +82,20 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
+                    settings.profileFlow().collect { p ->
+                        profile = p
+                        renderDay(lastDay)
+                        renderWeek()
+                    }
+                }
+                launch {
                     // Re-subscribes automatically when the date changes at midnight.
                     TimeUtils.todayKeyFlow()
                         .flatMapLatest { key -> repository.observeDay(key) }
-                        .collect { day -> renderDay(day) }
+                        .collect { day ->
+                            lastDay = day
+                            renderDay(day)
+                        }
                 }
                 launch {
                     TimeUtils.todayKeyFlow()
@@ -82,7 +104,14 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                             repository.observeRange(start, key)
                                 .map { rows -> DashboardUtils.buildWeek(rows, key) }
                         }
-                        .collect { bars -> binding.weekChart.setData(bars, profile.stepGoal) }
+                        .collect { bars ->
+                            weekBars = bars
+                            renderWeek()
+                        }
+                }
+                launch {
+                    combine(TimeUtils.todayKeyFlow(), repository.observeAll()) { key, rows -> key to rows }
+                        .collect { (key, rows) -> renderAchievements(key, rows) }
                 }
                 launch {
                     repository.observeState().collect { state ->
@@ -121,6 +150,36 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         binding.distanceValue.text = getString(R.string.value_km, day?.distanceKm ?: 0.0)
         binding.caloriesValue.text = getString(R.string.value_kcal, day?.calories ?: 0.0)
         binding.timeValue.text = DashboardUtils.formatDuration(day?.activeSeconds ?: 0L)
+    }
+
+    private fun renderWeek() {
+        if (weekBars.isNotEmpty()) binding.weekChart.setData(weekBars, profile.stepGoal)
+    }
+
+    private fun renderAchievements(todayKey: String, rows: List<DailyActivity>) {
+        val goalDates = StreakUtils.goalDates(rows)
+        val streak = StreakUtils.current(goalDates.toSet(), LocalDate.parse(todayKey))
+        binding.streakText.text = getString(
+            R.string.streak_home_format,
+            resources.getQuantityString(R.plurals.streak_days, streak, streak)
+        )
+
+        val recent = AchievementUtils.evaluate(rows)
+            .filter { it.unlocked }
+            .sortedByDescending { it.unlockedOn }
+            .take(3)
+
+        binding.recentContainer.removeAllViews()
+        binding.recentEmpty.visibility = if (recent.isEmpty()) View.VISIBLE else View.GONE
+        for (achievement in recent) {
+            val row = layoutInflater.inflate(R.layout.item_achievement, binding.recentContainer, false)
+            row.findViewById<TextView>(R.id.achTitle).setText(AchievementStrings.title(achievement.id))
+            row.findViewById<TextView>(R.id.achDesc).visibility = View.GONE
+            achievement.unlockedOn?.let {
+                row.findViewById<TextView>(R.id.achStatus).text = AchievementStrings.formatDate(it)
+            }
+            binding.recentContainer.addView(row)
+        }
     }
 
     private fun refreshState() {
