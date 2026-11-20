@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import com.steptrack.pro.databinding.ActivityMainBinding
 import com.steptrack.pro.ui.HomeFragment
 import com.steptrack.pro.ui.SectionFragment
+import com.steptrack.pro.ui.StatisticsFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,7 +32,7 @@ class MainActivity : AppCompatActivity() {
     private fun fragmentFor(itemId: Int): Fragment? = when (itemId) {
         R.id.nav_home -> HomeFragment()
         R.id.nav_statistics ->
-            SectionFragment.newInstance(R.string.statistics_title, R.string.statistics_note)
+            StatisticsFragment()
         R.id.nav_goals ->
             SectionFragment.newInstance(R.string.goals_title, R.string.goals_note)
         R.id.nav_profile ->

@@ -10,7 +10,10 @@ import androidx.core.content.ContextCompat
 import com.steptrack.pro.R
 import com.steptrack.pro.utils.DayBar
 
-/** Simple bar chart: one bar per day, today highlighted, thin line marking the daily goal. */
+/**
+ * Bar chart with one bar per day. The bar whose date equals [highlightKey] is drawn in the
+ * primary color, and a thin line marks the daily goal.
+ */
 class WeeklyBarChartView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -19,6 +22,8 @@ class WeeklyBarChartView @JvmOverloads constructor(
 
     private var bars: List<DayBar> = emptyList()
     private var goal: Int = 0
+    private var labelEvery: Int = 1
+    private var highlightKey: String? = null
 
     private fun dp(value: Float) = value * resources.displayMetrics.density
 
@@ -44,9 +49,20 @@ class WeeklyBarChartView @JvmOverloads constructor(
         )
     }
 
-    fun setData(newBars: List<DayBar>, dailyGoal: Int) {
+    /**
+     * @param labelEvery draw a label under every n-th bar (use more than 1 when there are many bars)
+     * @param highlightKey date key to highlight, by default the last bar (today on the Home screen)
+     */
+    fun setData(
+        newBars: List<DayBar>,
+        dailyGoal: Int,
+        labelEvery: Int = 1,
+        highlightKey: String? = newBars.lastOrNull()?.dateKey
+    ) {
         bars = newBars
         goal = dailyGoal
+        this.labelEvery = labelEvery.coerceAtLeast(1)
+        this.highlightKey = highlightKey
         invalidate()
     }
 
@@ -61,12 +77,15 @@ class WeeklyBarChartView @JvmOverloads constructor(
         val maxValue = maxOf(goal, bars.maxOf { it.steps }, 1)
 
         val slot = (width - paddingLeft - paddingRight).toFloat() / bars.size
-        val barWidth = slot * 0.5f
-        val radius = dp(6f)
+        val barWidth = slot * 0.6f
+        val radius = minOf(dp(6f), barWidth / 2f)
 
         if (goal > 0) {
             val goalY = chartBottom - chartHeight * (goal.toFloat() / maxValue)
-            canvas.drawLine(paddingLeft.toFloat(), goalY, (width - paddingRight).toFloat(), goalY, goalPaint)
+            canvas.drawLine(
+                paddingLeft.toFloat(), goalY,
+                (width - paddingRight).toFloat(), goalY, goalPaint
+            )
         }
 
         bars.forEachIndexed { index, bar ->
@@ -74,19 +93,21 @@ class WeeklyBarChartView @JvmOverloads constructor(
             val barHeight = maxOf(chartHeight * (bar.steps.toFloat() / maxValue), dp(4f))
             val paint = when {
                 bar.steps == 0 -> emptyPaint
-                index == bars.lastIndex -> todayPaint
+                bar.dateKey == highlightKey -> todayPaint
                 else -> pastPaint
             }
             canvas.drawRoundRect(
                 left, chartBottom - barHeight, left + barWidth, chartBottom,
                 radius, radius, paint
             )
-            canvas.drawText(
-                bar.label,
-                paddingLeft + index * slot + slot / 2f,
-                height - paddingBottom - labelSpace * 0.3f,
-                textPaint
-            )
+            if (index % labelEvery == 0) {
+                canvas.drawText(
+                    bar.label,
+                    paddingLeft + index * slot + slot / 2f,
+                    height - paddingBottom - labelSpace * 0.3f,
+                    textPaint
+                )
+            }
         }
     }
 }

@@ -53,4 +53,24 @@
     <string name="goals_note">Goal editing, streaks and achievements will arrive in Phase 7.</string>
     <string name="profile_title">Profile</string>
     <string name="profile_note">Height, weight and personal goal settings will arrive in Phase 7.</string>
+
+    <string name="mode_day">Day</string>
+    <string name="mode_week">Week</string>
+    <string name="mode_month">Month</string>
+    <string name="prev_desc">Previous period</string>
+    <string name="next_desc">Next period</string>
+    <string name="stats_chart_desc">Steps per day</string>
+    <string name="stats_empty">No steps recorded in this period.</string>
+
+    <string name="stat_steps">Steps</string>
+    <string name="stat_distance">Distance</string>
+    <string name="stat_calories">Calories</string>
+    <string name="stat_time">Active time</string>
+    <string name="stat_avg">Avg per active day</string>
+    <string name="stat_best">Best day</string>
+    <string name="stat_goal">Goal reached</string>
+    <string name="answer_yes">Yes</string>
+    <string name="answer_no">No</string>
+    <string name="goal_days_format">%1$d of %2$d days</string>
+    <string name="best_format">%1$s (%2$s)</string>
 </resources>
