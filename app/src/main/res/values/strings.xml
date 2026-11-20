@@ -3,4 +3,19 @@
     <string name="app_name">StepTrack Pro</string>
     <string name="tagline">Offline step tracking</string>
     <string name="version_format">v%1$s (build %2$d)</string>
+
+    <string name="steps_today_label">steps today</string>
+    <string name="details_format">%1$.2f km · %2$.0f kcal</string>
+
+    <string name="status_tracking">Tracking is active</string>
+    <string name="status_permission_needed">Physical activity permission is needed to count your steps.</string>
+    <string name="status_permission_blocked">Permission was denied. Please allow \"Physical activity\" in the app settings.</string>
+    <string name="status_no_sensor">This phone has no step counter sensor, so steps cannot be counted.</string>
+
+    <string name="action_grant">Grant permission</string>
+    <string name="action_open_settings">Open settings</string>
+
+    <string name="channel_name">Step tracking</string>
+    <string name="notif_starting">Starting step tracking…</string>
+    <string name="notif_steps_today">%1$s steps today</string>
 </resources>
