@@ -23,6 +23,9 @@ interface StepDao {
     @Query("SELECT * FROM tracker_state WHERE id = 1")
     suspend fun getState(): TrackerState?
 
+    @Query("SELECT * FROM tracker_state WHERE id = 1")
+    fun observeState(): Flow<TrackerState?>
+
     @Upsert
     suspend fun upsertState(state: TrackerState)
 }

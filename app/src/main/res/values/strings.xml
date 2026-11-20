@@ -18,4 +18,16 @@
     <string name="channel_name">Step tracking</string>
     <string name="notif_starting">Starting step tracking…</string>
     <string name="notif_steps_today">%1$s steps today</string>
+
+    <string name="last_step_format">Last step recorded: %1$s</string>
+    <string name="last_step_none">No step recorded yet</string>
+
+    <string name="action_battery">Battery guidance</string>
+    <string name="battery_title">Keep tracking alive</string>
+    <string name="battery_status_ok">Battery optimization: this app is unrestricted (good).</string>
+    <string name="battery_status_restricted">Battery optimization: the system may restrict this app in the background.</string>
+    <string name="battery_guide">1. Open Battery settings and set StepTrack Pro to \"Don\'t optimize\" (unrestricted).\n2. Vivo / iQOO: also allow Autostart and \"High background power consumption\" for StepTrack Pro. Menu names differ between versions.\n3. Keep the app locked in the recent apps list, and do not swipe it away if your phone offers a lock option.\n4. Check the notification: if it disappears, tracking has stopped. Open the app to restart it.</string>
+    <string name="battery_open_settings">Battery settings</string>
+    <string name="battery_open_app">App settings</string>
+    <string name="battery_close">Close</string>
 </resources>

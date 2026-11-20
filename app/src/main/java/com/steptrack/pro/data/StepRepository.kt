@@ -73,4 +73,6 @@ class StepRepository(private val db: AppDatabase) {
 
     fun observeRange(startKey: String, endKey: String): Flow<List<DailyActivity>> =
         dao.observeRange(startKey, endKey)
+
+    fun observeState(): Flow<TrackerState?> = dao.observeState()
 }

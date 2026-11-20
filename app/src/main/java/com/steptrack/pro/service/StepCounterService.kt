@@ -26,6 +26,7 @@ import com.steptrack.pro.database.AppDatabase
 import com.steptrack.pro.utils.BootInfo
 import com.steptrack.pro.utils.DateUtils
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -44,6 +45,7 @@ class StepCounterService : Service(), SensorEventListener {
     private lateinit var repository: StepRepository
     private val profile = UserProfile()
     private var listening = false
+    private var midnightJob: Job? = null
 
     // Temporary diagnostics shown in the notification (removed in a later phase).
     @Volatile private var eventCount = 0
@@ -100,6 +102,11 @@ class StepCounterService : Service(), SensorEventListener {
 
         registerSensor()
         scope.launch { updateNotification() }
+        midnightJob?.cancel()
+        midnightJob = MidnightWatcher.launch(scope) {
+            if (listening) sensorManager.flush(this@StepCounterService)
+            updateNotification()
+        }
         return START_STICKY
     }
 
