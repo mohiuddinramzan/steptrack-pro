@@ -4,6 +4,8 @@
         <item name="colorPrimary">@color/st_primary</item>
         <item name="colorOnPrimary">@color/st_background</item>
         <item name="colorSecondary">@color/st_secondary</item>
+        <item name="colorSecondaryContainer">@color/st_nav_indicator</item>
+        <item name="colorOnSecondaryContainer">@color/st_primary</item>
         <item name="colorSurface">@color/st_card</item>
         <item name="colorOnSurface">@color/st_text</item>
         <item name="android:colorBackground">@color/st_background</item>

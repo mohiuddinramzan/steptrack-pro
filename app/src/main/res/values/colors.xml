@@ -7,4 +7,5 @@
     <color name="st_text">#FFFFFF</color>
     <color name="st_muted">#A8BBCB</color>
     <color name="st_accent">#FFB66D</color>
+    <color name="st_nav_indicator">#234A48</color>
 </resources>

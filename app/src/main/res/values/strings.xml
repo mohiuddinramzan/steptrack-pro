@@ -30,4 +30,27 @@
     <string name="battery_open_settings">Battery settings</string>
     <string name="battery_open_app">App settings</string>
     <string name="battery_close">Close</string>
+
+    <string name="tab_home">Home</string>
+    <string name="tab_statistics">Statistics</string>
+    <string name="tab_goals">Goals</string>
+    <string name="tab_profile">Profile</string>
+
+    <string name="goal_format">of %1$s steps</string>
+    <string name="percent_format">%1$d%% of daily goal</string>
+    <string name="label_distance">Distance</string>
+    <string name="label_calories">Calories</string>
+    <string name="label_time">Active time</string>
+    <string name="value_km">%1$.2f km</string>
+    <string name="value_kcal">%1$.0f kcal</string>
+    <string name="week_title">Last 7 days</string>
+    <string name="week_desc">Steps in the last 7 days</string>
+    <string name="ring_desc">Daily step progress</string>
+
+    <string name="statistics_title">Statistics</string>
+    <string name="statistics_note">Daily, weekly and monthly statistics will arrive in Phase 6.</string>
+    <string name="goals_title">Goals</string>
+    <string name="goals_note">Goal editing, streaks and achievements will arrive in Phase 7.</string>
+    <string name="profile_title">Profile</string>
+    <string name="profile_note">Height, weight and personal goal settings will arrive in Phase 7.</string>
 </resources>
