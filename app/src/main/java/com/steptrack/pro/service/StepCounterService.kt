@@ -48,13 +48,6 @@ class StepCounterService : Service(), SensorEventListener {
     private var listening = false
     private var midnightJob: Job? = null
 
-    // Temporary diagnostics shown in the expanded notification (removed in a later phase).
-    @Volatile private var eventCount = 0
-    @Volatile private var lastRaw = -1L
-    @Volatile private var lastAgeMs = 0L
-    @Volatile private var lastEventDay = "-"
-    @Volatile private var lastAdded = -1L
-    @Volatile private var lastError = "none"
 
     override fun onCreate() {
         super.onCreate()
@@ -67,7 +60,7 @@ class StepCounterService : Service(), SensorEventListener {
         scope.launch {
             for (reading in readings) {
                 try {
-                    lastAdded = repository.recordSensorReading(
+                    repository.recordSensorReading(
                         counterValue = reading.counter,
                         eventTimeMillis = reading.timeMillis,
                         bootCount = reading.bootCount,
@@ -77,7 +70,6 @@ class StepCounterService : Service(), SensorEventListener {
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    lastError = e.javaClass.simpleName + ": " + (e.message ?: "")
                     Log.e(TAG, "Failed to save step reading", e)
                 }
                 updateNotification()
@@ -140,10 +132,6 @@ class StepCounterService : Service(), SensorEventListener {
         val now = System.currentTimeMillis()
         val eventTime = if (ageMs in 0L..MAX_EVENT_AGE_MS) now - ageMs else now
 
-        eventCount++
-        lastRaw = raw
-        lastAgeMs = ageMs
-        lastEventDay = DateUtils.dateKey(eventTime)
 
         readings.trySend(
             Reading(
@@ -235,14 +223,11 @@ class StepCounterService : Service(), SensorEventListener {
         } else {
             getString(R.string.notif_steps_today, NumberFormat.getInstance().format(steps))
         }
-        val debug = "DBG listen=$listening ev=$eventCount raw=$lastRaw " +
-            "age=${lastAgeMs / 1000}s day=$lastEventDay add=$lastAdded err=$lastError"
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_steps)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(text)
-            .setStyle(NotificationCompat.BigTextStyle().bigText("$text\n$debug"))
             .setContentIntent(openAppIntent())
             .setOngoing(true)
             .setOnlyAlertOnce(true)

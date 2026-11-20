@@ -2,12 +2,15 @@ package com.steptrack.pro.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.steptrack.pro.utils.AchievementId
+import com.steptrack.pro.utils.AchievementMerge
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import java.time.LocalDate
 
-/** Stores the user's profile and goal on the phone only. */
+/** Stores the user's profile, goal and unlocked achievements on the phone only. */
 class SettingsStore(context: Context) {
 
     private val prefs: SharedPreferences =
@@ -36,6 +39,13 @@ class SettingsStore(context: Context) {
         prefs.edit().putString(KEY_LAST_GOAL_NOTIFIED, date).apply()
     }
 
+    fun savedUnlocks(): Map<AchievementId, LocalDate> =
+        AchievementMerge.decode(prefs.getString(KEY_UNLOCKS, null))
+
+    fun saveUnlocks(unlocks: Map<AchievementId, LocalDate>) {
+        prefs.edit().putString(KEY_UNLOCKS, AchievementMerge.encode(unlocks)).apply()
+    }
+
     /** Emits the current profile, then again whenever it changes. */
     fun profileFlow(): Flow<UserProfile> = callbackFlow {
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
@@ -52,5 +62,6 @@ class SettingsStore(context: Context) {
         private const val KEY_WEIGHT = "weight_kg"
         private const val KEY_GOAL = "step_goal"
         private const val KEY_LAST_GOAL_NOTIFIED = "last_goal_notified"
+        private const val KEY_UNLOCKS = "achievement_unlocks"
     }
 }

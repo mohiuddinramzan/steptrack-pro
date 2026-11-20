@@ -4,8 +4,6 @@
     <string name="tagline">Offline step tracking</string>
     <string name="version_format">v%1$s (build %2$d)</string>
 
-    <string name="steps_today_label">steps today</string>
-    <string name="details_format">%1$.2f km · %2$.0f kcal</string>
 
     <string name="status_tracking">Tracking is active</string>
     <string name="status_permission_needed">Physical activity permission is needed to count your steps.</string>
@@ -48,11 +46,8 @@
     <string name="ring_desc">Daily step progress</string>
 
     <string name="statistics_title">Statistics</string>
-    <string name="statistics_note">Daily, weekly and monthly statistics will arrive in Phase 6.</string>
     <string name="goals_title">Goals</string>
-    <string name="goals_note">Goal editing, streaks and achievements will arrive in Phase 7.</string>
     <string name="profile_title">Profile</string>
-    <string name="profile_note">Height, weight and personal goal settings will arrive in Phase 7.</string>
 
     <string name="mode_day">Day</string>
     <string name="mode_week">Week</string>
@@ -119,4 +114,6 @@
     <string name="channel_goal_name">Goal alerts</string>
     <string name="goal_notif_title">Daily goal reached</string>
     <string name="goal_notif_text">You walked %1$s steps today. Great job!</string>
+
+    <string name="diag_title">Diagnostics</string>
 </resources>

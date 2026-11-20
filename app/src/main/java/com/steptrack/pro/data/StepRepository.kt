@@ -86,4 +86,6 @@ class StepRepository(private val db: AppDatabase) {
             dao.upsertDay(day.copy(goalCompleted = reached))
         }
     }
+
+    suspend fun getState(): TrackerState? = dao.getState()
 }

@@ -14,7 +14,7 @@ import com.steptrack.pro.data.SettingsStore
 import com.steptrack.pro.data.StepRepository
 import com.steptrack.pro.database.AppDatabase
 import com.steptrack.pro.databinding.FragmentGoalsBinding
-import com.steptrack.pro.utils.AchievementUtils
+import com.steptrack.pro.utils.AchievementTracker
 import com.steptrack.pro.utils.DateUtils
 import com.steptrack.pro.utils.ProfileValidator
 import com.steptrack.pro.utils.StreakUtils
@@ -77,7 +77,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         binding.bestStreakValue.text = resources.getQuantityString(R.plurals.streak_days, best, best)
 
         binding.achievementsContainer.removeAllViews()
-        for (achievement in AchievementUtils.evaluate(rows)) {
+        for (achievement in AchievementTracker.resolve(settings, rows)) {
             val row = layoutInflater.inflate(
                 R.layout.item_achievement, binding.achievementsContainer, false
             )

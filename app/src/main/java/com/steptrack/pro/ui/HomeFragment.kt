@@ -21,9 +21,10 @@ import com.steptrack.pro.data.UserProfile
 import com.steptrack.pro.database.AppDatabase
 import com.steptrack.pro.databinding.FragmentHomeBinding
 import com.steptrack.pro.service.StepCounterService
-import com.steptrack.pro.utils.AchievementUtils
+import com.steptrack.pro.utils.AchievementTracker
 import com.steptrack.pro.utils.BatteryUtils
 import com.steptrack.pro.utils.DashboardUtils
+import com.steptrack.pro.utils.DateUtils
 import com.steptrack.pro.utils.DayBar
 import com.steptrack.pro.utils.PermissionUtils
 import com.steptrack.pro.utils.StreakUtils
@@ -78,6 +79,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         )
         binding.actionButton.setOnClickListener { onActionClicked() }
         binding.batteryButton.setOnClickListener { showBatteryGuidance() }
+        binding.versionText.setOnLongClickListener {
+            showDiagnostics()
+            true
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -164,7 +169,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             resources.getQuantityString(R.plurals.streak_days, streak, streak)
         )
 
-        val recent = AchievementUtils.evaluate(rows)
+        val recent = AchievementTracker.resolve(settings, rows)
             .filter { it.unlocked }
             .sortedByDescending { it.unlockedOn }
             .take(3)
@@ -241,5 +246,27 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
             .setNegativeButton(R.string.battery_close, null)
             .show()
+    }
+
+    private fun showDiagnostics() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val state = repository.getState()
+            val today = repository.getDay(DateUtils.dateKey(System.currentTimeMillis()))
+            val lastEvent = state?.let {
+                java.text.DateFormat.getDateTimeInstance().format(Date(it.lastEventTimeMillis))
+            } ?: "-"
+            val message = "Sensor counter: ${state?.lastCounterValue ?: "-"}\n" +
+                "Last sensor event: $lastEvent\n" +
+                "Boot count: ${state?.lastBootCount ?: "-"}\n" +
+                "Steps today: ${today?.totalSteps ?: 0}\n" +
+                "Daily goal: ${profile.stepGoal}\n" +
+                "Version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+            if (_binding == null) return@launch
+            MaterialAlertDialogBuilder(requireActivity())
+                .setTitle(R.string.diag_title)
+                .setMessage(message)
+                .setPositiveButton(R.string.battery_close, null)
+                .show()
+        }
     }
 }
