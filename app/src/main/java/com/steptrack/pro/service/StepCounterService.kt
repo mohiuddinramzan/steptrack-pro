@@ -45,6 +45,14 @@ class StepCounterService : Service(), SensorEventListener {
     private val profile = UserProfile()
     private var listening = false
 
+    // Temporary diagnostics shown in the notification (removed in a later phase).
+    @Volatile private var eventCount = 0
+    @Volatile private var lastRaw = -1L
+    @Volatile private var lastAgeMs = 0L
+    @Volatile private var lastEventDay = "-"
+    @Volatile private var lastAdded = -1L
+    @Volatile private var lastError = "none"
+
     override fun onCreate() {
         super.onCreate()
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -55,18 +63,19 @@ class StepCounterService : Service(), SensorEventListener {
         scope.launch {
             for (reading in readings) {
                 try {
-                    repository.recordSensorReading(
+                    lastAdded = repository.recordSensorReading(
                         counterValue = reading.counter,
                         eventTimeMillis = reading.timeMillis,
                         bootCount = reading.bootCount,
                         profile = profile
                     )
-                    updateNotification()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
+                    lastError = e.javaClass.simpleName + ": " + (e.message ?: "")
                     Log.e(TAG, "Failed to save step reading", e)
                 }
+                updateNotification()
             }
         }
     }
@@ -113,12 +122,22 @@ class StepCounterService : Service(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_STEP_COUNTER || event.values.isEmpty()) return
-        // event.timestamp is time since boot; convert to wall-clock so batched events keep their real date.
+
+        val raw = event.values[0].toLong()
+        // event.timestamp should be nanoseconds since boot. Some phones report another clock,
+        // so an unreasonable age falls back to the current time instead of a wrong date.
         val ageMs = (SystemClock.elapsedRealtimeNanos() - event.timestamp) / 1_000_000L
-        val eventTime = System.currentTimeMillis() - ageMs.coerceAtLeast(0L)
+        val now = System.currentTimeMillis()
+        val eventTime = if (ageMs in 0L..MAX_EVENT_AGE_MS) now - ageMs else now
+
+        eventCount++
+        lastRaw = raw
+        lastAgeMs = ageMs
+        lastEventDay = DateUtils.dateKey(eventTime)
+
         readings.trySend(
             Reading(
-                counter = event.values[0].toLong(),
+                counter = raw,
                 timeMillis = eventTime,
                 bootCount = BootInfo.readBootCount(this)
             )
@@ -149,10 +168,16 @@ class StepCounterService : Service(), SensorEventListener {
     }
 
     private suspend fun updateNotification() {
-        val key = DateUtils.dateKey(System.currentTimeMillis())
-        val steps = repository.getDay(key)?.totalSteps ?: 0
-        getSystemService(NotificationManager::class.java)
-            .notify(NOTIFICATION_ID, buildNotification(steps))
+        try {
+            val key = DateUtils.dateKey(System.currentTimeMillis())
+            val steps = repository.getDay(key)?.totalSteps ?: 0
+            getSystemService(NotificationManager::class.java)
+                .notify(NOTIFICATION_ID, buildNotification(steps))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to update notification", e)
+        }
     }
 
     private fun buildNotification(steps: Int?): Notification {
@@ -167,10 +192,14 @@ class StepCounterService : Service(), SensorEventListener {
         } else {
             getString(R.string.notif_steps_today, NumberFormat.getInstance().format(steps))
         }
+        val debug = "DBG listen=$listening ev=$eventCount raw=$lastRaw " +
+            "age=${lastAgeMs / 1000}s day=$lastEventDay add=$lastAdded err=$lastError"
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_steps)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText("$text\n$debug"))
             .setContentIntent(openApp)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
@@ -184,6 +213,7 @@ class StepCounterService : Service(), SensorEventListener {
         private const val CHANNEL_ID = "step_tracking"
         private const val NOTIFICATION_ID = 1001
         private const val BATCH_LATENCY_US = 60_000_000
+        private const val MAX_EVENT_AGE_MS = 6L * 60 * 60 * 1000
 
         fun isStepSensorAvailable(context: Context): Boolean {
             val manager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
