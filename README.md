@@ -36,3 +36,11 @@ is stored in a local Room database and is not backed up (`allowBackup=false`).
 
 ## Documents
 `ROADMAP.md`, `CHANGELOG.md`, `progress.md`, `docs/testing.md`
+
+## License
+MIT, see the LICENSE file.
+
+## Install (beta)
+Download the latest APK from the Releases page, open it on your phone and allow installs from
+that source if Android asks. Check the downloaded file against the `.sha256` file if you like.
+Builds from before the first release were signed with a different test key; uninstall them first.
